@@ -16,6 +16,8 @@ node dist/cli.js src/__fixtures__/v1.xml src/__fixtures__/v2-breaking.xml
 
 ## Layout
 
+How a run flows through these files, and how to add a rule step by step: [ARCHITECTURE.md](ARCHITECTURE.md).
+
 | Path | Content |
 | --- | --- |
 | `src/cli.ts` | arguments, exit codes, help |

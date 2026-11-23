@@ -7,11 +7,16 @@ import {
   type XmlElement,
 } from './xml';
 
-/** Searchable index of an OData `$metadata` document (V2 or V4) plus annotation files. */
+// Searchable index of an OData `$metadata` document (V2 or V4) plus annotation files.
+
+/** A structural property of an entity or complex type. */
 export interface PropertyInfo {
   name: string;
+  /** Qualified type as written, e.g. `Edm.String` or `Collection(ZSRV.Address)`. */
   type: string;
+  /** EDMX: `true` unless `Nullable="false"`. CSDL JSON: `true` only with `"$Nullable": true`. */
   nullable: boolean;
+  /** Facets as written; absent means unlimited. `MaxLength` may be `max`. */
   maxLength?: string;
   precision?: string;
   scale?: string;
@@ -55,6 +60,7 @@ export interface EnumMemberInfo {
   value?: string;
 }
 
+/** A V4 enum type with its members. */
 export interface EnumTypeInfo {
   name: string;
   qualifiedName: string;
@@ -63,10 +69,14 @@ export interface EnumTypeInfo {
   members: EnumMemberInfo[];
 }
 
+/** An entity type or complex type. */
 export interface StructuredTypeInfo {
+  /** Name without namespace, e.g. `Order`. */
   name: string;
+  /** Name with namespace, e.g. `ZAPI_ORDERS_SRV.Order`. */
   qualifiedName: string;
   kind: 'EntityType' | 'ComplexType';
+  /** Key property names in document order; empty for complex types. */
   keys: string[];
   baseType?: string;
   abstract?: boolean;
@@ -74,6 +84,7 @@ export interface StructuredTypeInfo {
   navigations: NavigationInfo[];
 }
 
+/** An entity set or a V4 singleton of the entity container. */
 export interface EntitySetInfo {
   name: string;
   entityType: string;
@@ -82,12 +93,14 @@ export interface EntitySetInfo {
   navigationBindings: Array<{ path: string; target: string }>;
 }
 
+/** A parameter of an action, function or V2 function import; `nullable` as in {@link PropertyInfo}. */
 export interface ParameterInfo {
   name: string;
   type: string;
   nullable: boolean;
 }
 
+/** A V2 function import, or a V4 action, function, action import or function import. */
 export interface OperationInfo {
   name: string;
   kind: 'FunctionImport' | 'ActionImport' | 'Action' | 'Function';

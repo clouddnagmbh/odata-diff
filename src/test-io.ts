@@ -2,7 +2,14 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { CliIo } from './cli';
 
-/** In-memory io for tests: files from __fixtures__ (or `files`), fetch from `responses`. */
+/**
+ * In-memory `CliIo` for tests: the whole command runs without disk writes or network.
+ *
+ * - `readFile` serves `files`, else the file of that name in `__fixtures__`
+ * - `fetch` answers from `responses` by exact URL, else fails like a DNS error
+ * - `requests` records URL and headers of every fetch, so tests can check what was sent
+ * - `out()`, `err()` and `written` hold what the command printed and wrote
+ */
 export const testIo = (
   options: {
     files?: Record<string, string>;

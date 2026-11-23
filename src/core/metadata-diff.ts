@@ -15,8 +15,15 @@ import type {
  * namespace or container name on another system still compares.
  */
 
+/**
+ * What a change means for clients built against the old state:
+ * - `breaking`: such a client can fail (request rejected, response misread)
+ * - `compatible`: such a client keeps working; something was added or relaxed
+ * - `annotation`: only annotations changed; UIs may look different, the data contract did not
+ */
 export type ChangeSeverity = 'breaking' | 'compatible' | 'annotation';
 
+/** Every kind of change the diff detects; see `compare*` and `diffMetadata` below for its severity. */
 export type ChangeKind =
   | 'set-removed'
   | 'set-added'
@@ -50,12 +57,15 @@ export type ChangeKind =
   | 'annotation-changed'
   | 'version';
 
+/** One difference between two `$metadata` states. */
 export interface MetadataChange {
   severity: ChangeSeverity;
   kind: ChangeKind;
   /** What changed: `Products`, `Product/Name`, `Product/Name@Common.Label`. */
   target: string;
+  /** Old value (type, facet, key list, annotation value …), for kinds that have one. */
   before?: string;
+  /** New value, for kinds that have one. `property-added` adds `, Nullable=false` for required ones. */
   after?: string;
 }
 
@@ -294,6 +304,15 @@ const termName = (term: string) =>
     .replace(/^com\.sap\.vocabularies\.(\w+)\.v1\./, '$1.')
     .replace(/^Org\.OData\.(\w+)\.V1\./, '$1.');
 
+/**
+ * Compares two states of a service, in this order: OData version, entity
+ * sets, entity and complex types (keys, base type, properties, navigations),
+ * enum types, operations, annotations. Each element is matched by name and
+ * compared field by field.
+ *
+ * The result is sorted by severity (breaking first), then by target, so it
+ * is stable for reports and snapshots. Identical states give an empty list.
+ */
 export const diffMetadata = (before: MetadataIndex, after: MetadataIndex): MetadataChange[] => {
   const changes: MetadataChange[] = [];
   if (before.odataVersion !== after.odataVersion)

@@ -7,17 +7,35 @@ import {
 } from './core';
 
 /**
- * Reports of the `$metadata` diff for the command line: text for the CI log,
- * Markdown for a pull request comment, JSON for further tools. The change
- * texts are the workbench's (`diff.kind.*` in odata-workbench); a test keeps
- * both in step.
+ * Turns the list of changes into a report, and decides pass or fail.
+ *
+ * | Format | For | Shape |
+ * | --- | --- | --- |
+ * | `text` | the CI log | title, counts, one aligned line per change, verdict |
+ * | `markdown` | pull request comments, job summaries | one table per severity |
+ * | `json` | your own tooling | `{ before, after, counts, failOn, failed, changes }` |
+ *
+ * The change texts are the same as in the ODataTailor extension (`diff.kind.*`
+ * of its workbench), so a change reads the same in the browser and in the
+ * pipeline. In the monorepo a test keeps the two in step.
+ *
+ * Everything here is pure: same input, same output, no I/O.
  */
 
+/** Language of the report texts. JSON keys and values stay English in both. */
 export type Lang = 'en' | 'de';
+/** Report format, see the table above. */
 export type Format = 'text' | 'markdown' | 'json';
 /** Lowest severity that fails the run; `never` only reports. */
 export type FailOn = ChangeSeverity | 'never';
 
+/**
+ * One text per kind of change and language. `{before}` and `{after}` are
+ * replaced with the change's values (see {@link describeChange}).
+ *
+ * `Record<ChangeKind, …>` makes the compiler insist on a text for every kind,
+ * so a new kind in the core cannot ship without its texts.
+ */
 export const KIND_TEXTS: Record<Lang, Record<ChangeKind, string>> = {
   en: {
     'set-removed': 'Entity set removed',
@@ -87,6 +105,7 @@ export const KIND_TEXTS: Record<Lang, Record<ChangeKind, string>> = {
   },
 };
 
+// Texts of the report frame: title, severity names, counts, verdict.
 const TEXTS = {
   en: {
     title: (before: string, after: string) => `$metadata diff: ${before} → ${after}`,
@@ -116,29 +135,53 @@ const TEXTS = {
   },
 } as const;
 
+// Lower is more severe; the core sorts by the same order.
 const RANK: Record<ChangeSeverity, number> = { breaking: 0, compatible: 1, annotation: 2 };
 
-/** Changes that fail the run: the given severity and everything more severe. */
+/**
+ * The changes that fail the run: those of the `failOn` severity and of every
+ * more severe one. `never` fails nothing.
+ *
+ * @example
+ * ```ts
+ * failingChanges(changes, 'breaking');   // only breaking
+ * failingChanges(changes, 'compatible'); // breaking and compatible
+ * failingChanges(changes, 'annotation'); // all
+ * ```
+ */
 export const failingChanges = (
   changes: readonly MetadataChange[],
   failOn: FailOn,
 ): MetadataChange[] =>
   failOn === 'never' ? [] : changes.filter((change) => RANK[change.severity] <= RANK[failOn]);
 
+/**
+ * The human-readable description of one change, as in the third column of the text report.
+ *
+ * @example
+ * ```ts
+ * describeChange({ severity: 'breaking', kind: 'max-length', target: 'Orders/customer',
+ *   before: '80', after: '40' }, 'en'); // 'MaxLength 80 → 40'
+ * ```
+ */
 export const describeChange = (change: MetadataChange, lang: Lang): string =>
   KIND_TEXTS[lang][change.kind]
     .replace('{before}', change.before ?? '')
     .replace('{after}', change.after ?? '');
 
+/** What every report needs. Built once in `run` and passed to every renderer. */
 export interface ReportInput {
   changes: readonly MetadataChange[];
   /** How the two sides are named in the report: file name or URL. */
   before: string;
   after: string;
+  /** Decides the verdict line and `failed` in JSON, not which changes are listed. */
   failOn: FailOn;
   lang: Lang;
 }
 
+// Plain text for logs: the severity column is padded to the longest name ("ANNOTATION ONLY"),
+// and the target column to the longest target, so the descriptions line up.
 const textReport = ({ changes, before, after, failOn, lang }: ReportInput): string => {
   const t = TEXTS[lang];
   const lines = [t.title(before, after), t.counts(changeCounts(changes)), ''];
@@ -153,7 +196,10 @@ const textReport = ({ changes, before, after, failOn, lang }: ReportInput): stri
   return `${lines.join('\n')}\n`;
 };
 
-/** The last line of every text report; also printed alone when the report goes to a file. */
+/**
+ * The verdict: `✗ … failing` or `✓ …`. It is the last line of the text report,
+ * and the only line on stdout when the report goes to `--output`.
+ */
 export const summaryLine = ({ changes, failOn, lang }: ReportInput): string => {
   const failing = failingChanges(changes, failOn);
   return failing.length && failOn !== 'never'
@@ -161,6 +207,13 @@ export const summaryLine = ({ changes, failOn, lang }: ReportInput): string => {
     : TEXTS[lang].passed(failOn);
 };
 
+/**
+ * Renders the report in the given format. The result always ends with a newline.
+ *
+ * The JSON shape (`before`, `after`, `counts`, `failOn`, `failed`, `changes`)
+ * is public interface. Adding fields is fine, but removing or renaming one
+ * requires a major version.
+ */
 export const formatReport = (format: Format, input: ReportInput): string => {
   if (format === 'json')
     return `${JSON.stringify(

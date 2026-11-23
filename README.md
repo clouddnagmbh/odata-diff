@@ -133,7 +133,7 @@ A minor version can find a change that an older version missed, and so fail a bu
 
 ## Contributing
 
-Issues and pull requests are welcome, especially a trimmed `$metadata` where the tool gets something wrong. See [CONTRIBUTING.md](https://github.com/clouddnagmbh/odata-diff/blob/main/CONTRIBUTING.md). Security issues go through [SECURITY.md](https://github.com/clouddnagmbh/odata-diff/blob/main/SECURITY.md).
+Issues and pull requests are welcome, especially a trimmed `$metadata` where the tool gets something wrong. How the code is built: [ARCHITECTURE.md](https://github.com/clouddnagmbh/odata-diff/blob/main/ARCHITECTURE.md). How to contribute: [CONTRIBUTING.md](https://github.com/clouddnagmbh/odata-diff/blob/main/CONTRIBUTING.md). Security issues go through [SECURITY.md](https://github.com/clouddnagmbh/odata-diff/blob/main/SECURITY.md).
 
 ## Licence
 
