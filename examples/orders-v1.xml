@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Capabilities.V1.xml">
+    <edmx:Include Alias="Capabilities" Namespace="Org.OData.Capabilities.V1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Alias="Core" Namespace="Org.OData.Core.V1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Measures.V1.xml">
+    <edmx:Include Alias="Measures" Namespace="Org.OData.Measures.V1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
+    <edmx:Include Alias="UI" Namespace="com.sap.vocabularies.UI.v1"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema Namespace="OrderService" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <Annotation Term="Core.Links">
+        <Collection>
+          <Record>
+            <PropertyValue Property="rel" String="author"/>
+            <PropertyValue Property="href" String="https://cap.cloud.sap"/>
+          </Record>
+        </Collection>
+      </Annotation>
+      <EntityContainer Name="EntityContainer">
+        <EntitySet Name="Orders" EntityType="OrderService.Orders">
+          <NavigationPropertyBinding Path="status" Target="OrderStatus"/>
+          <NavigationPropertyBinding Path="currency" Target="Currencies"/>
+          <NavigationPropertyBinding Path="items" Target="OrderItems"/>
+        </EntitySet>
+        <EntitySet Name="OrderItems" EntityType="OrderService.OrderItems">
+          <NavigationPropertyBinding Path="order" Target="Orders"/>
+        </EntitySet>
+        <EntitySet Name="OrderStatus" EntityType="OrderService.OrderStatus">
+          <NavigationPropertyBinding Path="texts" Target="OrderStatus_texts"/>
+          <NavigationPropertyBinding Path="localized" Target="OrderStatus_texts"/>
+        </EntitySet>
+        <EntitySet Name="Currencies" EntityType="OrderService.Currencies">
+          <NavigationPropertyBinding Path="texts" Target="Currencies_texts"/>
+          <NavigationPropertyBinding Path="localized" Target="Currencies_texts"/>
+        </EntitySet>
+        <EntitySet Name="OrderStatus_texts" EntityType="OrderService.OrderStatus_texts"/>
+        <EntitySet Name="Currencies_texts" EntityType="OrderService.Currencies_texts"/>
+      </EntityContainer>
+      <EntityType Name="Orders">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Guid" Nullable="false"/>
+        <Property Name="createdAt" Type="Edm.DateTimeOffset" Precision="7"/>
+        <Property Name="createdBy" Type="Edm.String" MaxLength="255"/>
+        <Property Name="modifiedAt" Type="Edm.DateTimeOffset" Precision="7"/>
+        <Property Name="modifiedBy" Type="Edm.String" MaxLength="255"/>
+        <Property Name="orderNo" Type="Edm.String" MaxLength="10"/>
+        <Property Name="title" Type="Edm.String" MaxLength="100"/>
+        <Property Name="customer" Type="Edm.String" MaxLength="80"/>
+        <NavigationProperty Name="status" Type="OrderService.OrderStatus">
+          <ReferentialConstraint Property="status_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="status_code" Type="Edm.String" MaxLength="1" DefaultValue="N"/>
+        <Property Name="orderDate" Type="Edm.Date"/>
+        <Property Name="totalAmount" Type="Edm.Decimal" Precision="13" Scale="2"/>
+        <NavigationProperty Name="currency" Type="OrderService.Currencies">
+          <ReferentialConstraint Property="currency_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="currency_code" Type="Edm.String" MaxLength="3"/>
+        <Property Name="notes" Type="Edm.String"/>
+        <NavigationProperty Name="items" Type="Collection(OrderService.OrderItems)" Partner="order">
+          <OnDelete Action="Cascade"/>
+        </NavigationProperty>
+      </EntityType>
+      <EntityType Name="OrderItems">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Guid" Nullable="false"/>
+        <NavigationProperty Name="order" Type="OrderService.Orders" Partner="items">
+          <ReferentialConstraint Property="order_ID" ReferencedProperty="ID"/>
+        </NavigationProperty>
+        <Property Name="order_ID" Type="Edm.Guid"/>
+        <Property Name="pos" Type="Edm.Int32"/>
+        <Property Name="product" Type="Edm.String" MaxLength="80"/>
+        <Property Name="quantity" Type="Edm.Int32" DefaultValue="1"/>
+        <Property Name="unitPrice" Type="Edm.Decimal" Precision="13" Scale="2"/>
+        <Property Name="amount" Type="Edm.Decimal" Precision="13" Scale="2"/>
+      </EntityType>
+      <EntityType Name="OrderStatus">
+        <Key>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="1" Nullable="false"/>
+        <Property Name="criticality" Type="Edm.Int32"/>
+        <NavigationProperty Name="texts" Type="Collection(OrderService.OrderStatus_texts)">
+          <OnDelete Action="Cascade"/>
+        </NavigationProperty>
+        <NavigationProperty Name="localized" Type="OrderService.OrderStatus_texts">
+          <ReferentialConstraint Property="code" ReferencedProperty="code"/>
+        </NavigationProperty>
+      </EntityType>
+      <EntityType Name="Currencies">
+        <Key>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="3" Nullable="false"/>
+        <Property Name="symbol" Type="Edm.String" MaxLength="5"/>
+        <Property Name="minorUnit" Type="Edm.Int16"/>
+        <NavigationProperty Name="texts" Type="Collection(OrderService.Currencies_texts)">
+          <OnDelete Action="Cascade"/>
+        </NavigationProperty>
+        <NavigationProperty Name="localized" Type="OrderService.Currencies_texts">
+          <ReferentialConstraint Property="code" ReferencedProperty="code"/>
+        </NavigationProperty>
+      </EntityType>
+      <EntityType Name="OrderStatus_texts">
+        <Key>
+          <PropertyRef Name="locale"/>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="locale" Type="Edm.String" MaxLength="14" Nullable="false"/>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="1" Nullable="false"/>
+      </EntityType>
+      <EntityType Name="Currencies_texts">
+        <Key>
+          <PropertyRef Name="locale"/>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="locale" Type="Edm.String" MaxLength="14" Nullable="false"/>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="3" Nullable="false"/>
+      </EntityType>
+      <Action Name="approve" IsBound="true">
+        <Parameter Name="in" Type="OrderService.Orders"/>
+      </Action>
+      <Action Name="decline" IsBound="true">
+        <Parameter Name="in" Type="OrderService.Orders"/>
+        <Parameter Name="reason" Type="Edm.String"/>
+      </Action>
+      <Annotations Target="OrderService.Orders">
+        <Annotation Term="UI.HeaderInfo">
+          <Record Type="UI.HeaderInfoType">
+            <PropertyValue Property="TypeName" String="Order"/>
+            <PropertyValue Property="TypeNamePlural" String="Orders"/>
+            <PropertyValue Property="Title">
+              <Record Type="UI.DataField">
+                <PropertyValue Property="Value" Path="title"/>
+              </Record>
+            </PropertyValue>
+            <PropertyValue Property="Description">
+              <Record Type="UI.DataField">
+                <PropertyValue Property="Value" Path="orderNo"/>
+              </Record>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="UI.SelectionFields">
+          <Collection>
+            <PropertyPath>orderNo</PropertyPath>
+            <PropertyPath>customer</PropertyPath>
+            <PropertyPath>status_code</PropertyPath>
+            <PropertyPath>orderDate</PropertyPath>
+          </Collection>
+        </Annotation>
+        <Annotation Term="UI.LineItem">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="orderNo"/>
+              <PropertyValue Property="Label" String="Order"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="title"/>
+              <PropertyValue Property="Label" String="Title"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="customer"/>
+              <PropertyValue Property="Label" String="Customer"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="status_code"/>
+              <PropertyValue Property="Label" String="Status"/>
+              <PropertyValue Property="Criticality" Path="status/criticality"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="orderDate"/>
+              <PropertyValue Property="Label" String="Date"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="totalAmount"/>
+              <PropertyValue Property="Label" String="Total"/>
+            </Record>
+            <Record Type="UI.DataFieldForAction">
+              <PropertyValue Property="Action" String="OrderService.approve"/>
+              <PropertyValue Property="Label" String="Approve"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <Annotation Term="UI.HeaderFacets">
+          <Collection>
+            <Record Type="UI.ReferenceFacet">
+              <PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#Total"/>
+            </Record>
+            <Record Type="UI.ReferenceFacet">
+              <PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#Status"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <Annotation Term="UI.DataPoint" Qualifier="Total">
+          <Record Type="UI.DataPointType">
+            <PropertyValue Property="Value" Path="totalAmount"/>
+            <PropertyValue Property="Title" String="Total"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="UI.DataPoint" Qualifier="Status">
+          <Record Type="UI.DataPointType">
+            <PropertyValue Property="Value" Path="status_code"/>
+            <PropertyValue Property="Title" String="Status"/>
+            <PropertyValue Property="Criticality" Path="status/criticality"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataFieldForAction">
+              <PropertyValue Property="Action" String="OrderService.approve"/>
+              <PropertyValue Property="Label" String="Approve"/>
+            </Record>
+            <Record Type="UI.DataFieldForAction">
+              <PropertyValue Property="Action" String="OrderService.decline"/>
+              <PropertyValue Property="Label" String="Decline"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <Annotation Term="UI.FieldGroup" Qualifier="General">
+          <Record Type="UI.FieldGroupType">
+            <PropertyValue Property="Label" String="General"/>
+            <PropertyValue Property="Data">
+              <Collection>
+                <Record Type="UI.DataField">
+                  <PropertyValue Property="Value" Path="title"/>
+                </Record>
+                <Record Type="UI.DataField">
+                  <PropertyValue Property="Value" Path="customer"/>
+                </Record>
+                <Record Type="UI.DataField">
+                  <PropertyValue Property="Value" Path="orderDate"/>
+                </Record>
+                <Record Type="UI.DataField">
+                  <PropertyValue Property="Value" Path="currency_code"/>
+                </Record>
+                <Record Type="UI.DataField">
+                  <PropertyValue Property="Value" Path="notes"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="UI.Facets">
+          <Collection>
+            <Record Type="UI.ReferenceFacet">
+              <PropertyValue Property="ID" String="General"/>
+              <PropertyValue Property="Label" String="General"/>
+              <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#General"/>
+            </Record>
+            <Record Type="UI.ReferenceFacet">
+              <PropertyValue Property="ID" String="Items"/>
+              <PropertyValue Property="Label" String="Items"/>
+              <PropertyValue Property="Target" AnnotationPath="items/@UI.LineItem"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <Annotation Term="Common.SideEffects" Qualifier="Items">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceEntities">
+              <Collection>
+                <NavigationPropertyPath>items</NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>totalAmount</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.EntityContainer/Orders">
+        <Annotation Term="Common.SideEffects" Qualifier="Items">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceEntities">
+              <Collection>
+                <NavigationPropertyPath>items</NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>totalAmount</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/ID">
+        <Annotation Term="Core.ComputedDefaultValue" Bool="true"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/createdAt">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="UI.ExcludeFromNavigationContext" Bool="true"/>
+        <Annotation Term="Core.Immutable" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Common.Label" String="{i18n>CreatedAt}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/createdBy">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="UI.ExcludeFromNavigationContext" Bool="true"/>
+        <Annotation Term="Core.Immutable" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Core.Description" String="{i18n>UserID.Description}"/>
+        <Annotation Term="Common.Label" String="{i18n>CreatedBy}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/modifiedAt">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="UI.ExcludeFromNavigationContext" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Common.Label" String="{i18n>ChangedAt}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/modifiedBy">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="UI.ExcludeFromNavigationContext" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Core.Description" String="{i18n>UserID.Description}"/>
+        <Annotation Term="Common.Label" String="{i18n>ChangedBy}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/orderNo">
+        <Annotation Term="Common.Label" String="Order"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/title">
+        <Annotation Term="Common.Label" String="Title"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/customer">
+        <Annotation Term="Common.Label" String="Customer"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/status">
+        <Annotation Term="Common.Label" String="Status"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/status_code">
+        <Annotation Term="Common.Text" Path="status/name">
+          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
+        </Annotation>
+        <Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="CollectionPath" String="OrderStatus"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="status_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="Common.Label" String="Status"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/orderDate">
+        <Annotation Term="Common.Label" String="Order Date"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/totalAmount">
+        <Annotation Term="Measures.ISOCurrency" Path="currency_code"/>
+        <Annotation Term="Common.Label" String="Total"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/currency">
+        <Annotation Term="Common.Label" String="{i18n>Currency}"/>
+        <Annotation Term="Core.Description" String="{i18n>CurrencyCode.Description}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/currency_code">
+        <Annotation Term="Common.Label" String="{i18n>Currency}"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="{i18n>Currency}"/>
+            <PropertyValue Property="CollectionPath" String="Currencies"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="currency_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="Core.Description" String="{i18n>CurrencyCode.Description}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/notes">
+        <Annotation Term="UI.MultiLineText" Bool="true"/>
+        <Annotation Term="Common.Label" String="Notes"/>
+      </Annotations>
+      <Annotations Target="OrderService.approve(OrderService.Orders)">
+        <Annotation Term="Common.SideEffects">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>in/status_code</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.decline(OrderService.Orders)">
+        <Annotation Term="Common.SideEffects">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>in/status_code</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.OrderItems">
+        <Annotation Term="UI.HeaderInfo">
+          <Record Type="UI.HeaderInfoType">
+            <PropertyValue Property="TypeName" String="Item"/>
+            <PropertyValue Property="TypeNamePlural" String="Items"/>
+            <PropertyValue Property="Title">
+              <Record Type="UI.DataField">
+                <PropertyValue Property="Value" Path="product"/>
+              </Record>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="UI.LineItem">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="pos"/>
+              <PropertyValue Property="Label" String="Pos."/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="product"/>
+              <PropertyValue Property="Label" String="Product"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="quantity"/>
+              <PropertyValue Property="Label" String="Quantity"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="unitPrice"/>
+              <PropertyValue Property="Label" String="Unit Price"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="amount"/>
+              <PropertyValue Property="Label" String="Amount"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <Annotation Term="Common.SideEffects" Qualifier="Amount">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceProperties">
+              <Collection>
+                <PropertyPath>quantity</PropertyPath>
+                <PropertyPath>unitPrice</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>amount</String>
+                <String>order/totalAmount</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.EntityContainer/OrderItems">
+        <Annotation Term="Common.SideEffects" Qualifier="Amount">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceProperties">
+              <Collection>
+                <PropertyPath>quantity</PropertyPath>
+                <PropertyPath>unitPrice</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>amount</String>
+                <String>order/totalAmount</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.OrderItems/ID">
+        <Annotation Term="Core.ComputedDefaultValue" Bool="true"/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderItems/pos">
+        <Annotation Term="Common.Label" String="Pos."/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderItems/product">
+        <Annotation Term="Common.Label" String="Product"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderItems/quantity">
+        <Annotation Term="Common.Label" String="Quantity"/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderItems/unitPrice">
+        <Annotation Term="Common.Label" String="Unit Price"/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderItems/amount">
+        <Annotation Term="Common.Label" String="Amount"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderStatus">
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="name"/>
+            </Record>
+          </Collection>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.EntityContainer/OrderStatus">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.InsertRestrictions">
+          <Record Type="Capabilities.InsertRestrictionsType">
+            <PropertyValue Property="Insertable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.UpdateRestrictions">
+          <Record Type="Capabilities.UpdateRestrictionsType">
+            <PropertyValue Property="Updatable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.OrderStatus/name">
+        <Annotation Term="Common.Label" String="{i18n>Name}"/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderStatus/descr">
+        <Annotation Term="Common.Label" String="{i18n>Description}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies">
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="name"/>
+            </Record>
+          </Collection>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies/name">
+        <Annotation Term="Common.Label" String="{i18n>Name}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies/descr">
+        <Annotation Term="Common.Label" String="{i18n>Description}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies/code">
+        <Annotation Term="Common.Text" Path="name"/>
+        <Annotation Term="Common.Label" String="{i18n>CurrencyCode}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies/symbol">
+        <Annotation Term="Common.Label" String="{i18n>CurrencySymbol}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies/minorUnit">
+        <Annotation Term="Common.Label" String="{i18n>CurrencyMinorUnit}"/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderStatus_texts/locale">
+        <Annotation Term="Common.Label" String="{i18n>LanguageCode}"/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderStatus_texts/name">
+        <Annotation Term="Common.Label" String="{i18n>Name}"/>
+      </Annotations>
+      <Annotations Target="OrderService.OrderStatus_texts/descr">
+        <Annotation Term="Common.Label" String="{i18n>Description}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies_texts/locale">
+        <Annotation Term="Common.Label" String="{i18n>LanguageCode}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies_texts/name">
+        <Annotation Term="Common.Label" String="{i18n>Name}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies_texts/descr">
+        <Annotation Term="Common.Label" String="{i18n>Description}"/>
+      </Annotations>
+      <Annotations Target="OrderService.Currencies_texts/code">
+        <Annotation Term="Common.Text" Path="name"/>
+        <Annotation Term="Common.Label" String="{i18n>CurrencyCode}"/>
+      </Annotations>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

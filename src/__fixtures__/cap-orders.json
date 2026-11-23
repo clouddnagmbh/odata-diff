@@ -1,0 +1,362 @@
+{
+  "$Version": "4.0",
+  "$EntityContainer": "OrderService.EntityContainer",
+  "$Reference": {
+    "https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Capabilities.V1.xml": {
+      "$Include": [
+        {
+          "$Alias": "Capabilities",
+          "$Namespace": "Org.OData.Capabilities.V1"
+        }
+      ]
+    },
+    "https://sap.github.io/odata-vocabularies/vocabularies/Common.xml": {
+      "$Include": [
+        {
+          "$Alias": "Common",
+          "$Namespace": "com.sap.vocabularies.Common.v1"
+        }
+      ]
+    },
+    "https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml": {
+      "$Include": [
+        {
+          "$Alias": "Core",
+          "$Namespace": "Org.OData.Core.V1"
+        }
+      ]
+    },
+    "https://sap.github.io/odata-vocabularies/vocabularies/UI.xml": {
+      "$Include": [
+        {
+          "$Alias": "UI",
+          "$Namespace": "com.sap.vocabularies.UI.v1"
+        }
+      ]
+    },
+    "https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Validation.V1.xml": {
+      "$Include": [
+        {
+          "$Alias": "Validation",
+          "$Namespace": "Org.OData.Validation.V1"
+        }
+      ]
+    }
+  },
+  "OrderService": {
+    "@Core.Links": [
+      {
+        "rel": "author",
+        "href": "https://cap.cloud.sap"
+      }
+    ],
+    "EntityContainer": {
+      "$Kind": "EntityContainer",
+      "Orders": {
+        "$Collection": true,
+        "$Type": "OrderService.Orders",
+        "$NavigationPropertyBinding": {
+          "customer": "Customers",
+          "items": "OrderItems"
+        }
+      },
+      "Customers": {
+        "$Collection": true,
+        "$Type": "OrderService.Customers",
+        "$NavigationPropertyBinding": {
+          "orders": "Orders"
+        }
+      },
+      "OrderItems": {
+        "$Collection": true,
+        "$Type": "OrderService.OrderItems",
+        "$NavigationPropertyBinding": {
+          "parent": "Orders"
+        }
+      },
+      "Settings": {
+        "$Type": "OrderService.Settings"
+      },
+      "resetAll": {
+        "$Action": "OrderService.resetAll"
+      },
+      "topCustomers": {
+        "$Function": "OrderService.topCustomers",
+        "$EntitySet": "Customers"
+      }
+    },
+    "Orders": {
+      "$Kind": "EntityType",
+      "$Key": ["ID"],
+      "ID": {
+        "$Type": "Edm.Guid"
+      },
+      "orderNo": {
+        "$MaxLength": 10,
+        "$Nullable": true
+      },
+      "status": {
+        "$MaxLength": 1,
+        "$DefaultValue": "O",
+        "$Nullable": true
+      },
+      "priority": {
+        "$Type": "Edm.Int32",
+        "$Nullable": true
+      },
+      "total": {
+        "$Type": "Edm.Decimal",
+        "$Precision": 15,
+        "$Scale": 2,
+        "$Nullable": true
+      },
+      "date": {
+        "$Type": "Edm.Date",
+        "$Nullable": true
+      },
+      "customer": {
+        "$Kind": "NavigationProperty",
+        "$Type": "OrderService.Customers",
+        "$Partner": "orders",
+        "$Nullable": true,
+        "$ReferentialConstraint": {
+          "customer_ID": "ID"
+        }
+      },
+      "customer_ID": {
+        "$Type": "Edm.Guid",
+        "$Nullable": true
+      },
+      "items": {
+        "$Kind": "NavigationProperty",
+        "$Type": "OrderService.OrderItems",
+        "$Partner": "parent",
+        "$Collection": true,
+        "$OnDelete": "Cascade"
+      }
+    },
+    "Customers": {
+      "$Kind": "EntityType",
+      "$Key": ["ID"],
+      "ID": {
+        "$Type": "Edm.Guid"
+      },
+      "name": {
+        "$MaxLength": 80
+      },
+      "address_street": {
+        "$MaxLength": 60,
+        "$Nullable": true
+      },
+      "address_city": {
+        "$MaxLength": 40,
+        "$Nullable": true
+      },
+      "orders": {
+        "$Kind": "NavigationProperty",
+        "$Type": "OrderService.Orders",
+        "$Partner": "customer",
+        "$Collection": true
+      }
+    },
+    "OrderItems": {
+      "$Kind": "EntityType",
+      "$Key": ["parent_ID", "pos"],
+      "parent": {
+        "$Kind": "NavigationProperty",
+        "$Type": "OrderService.Orders",
+        "$Partner": "items",
+        "$Nullable": true,
+        "$ReferentialConstraint": {
+          "parent_ID": "ID"
+        }
+      },
+      "parent_ID": {
+        "$Type": "Edm.Guid"
+      },
+      "pos": {
+        "$Type": "Edm.Int32"
+      },
+      "product": {
+        "$MaxLength": 40,
+        "$Nullable": true
+      },
+      "qty": {
+        "$Type": "Edm.Int32",
+        "$Nullable": true
+      }
+    },
+    "Settings": {
+      "$Kind": "EntityType",
+      "$Key": ["ID"],
+      "ID": {
+        "$Type": "Edm.Int32"
+      },
+      "currency": {
+        "$MaxLength": 3,
+        "$Nullable": true
+      }
+    },
+    "$Annotations": {
+      "OrderService.Orders": {
+        "@UI.LineItem": [
+          {
+            "Value": {
+              "$Path": "orderNo"
+            },
+            "Label": "Order"
+          },
+          {
+            "Value": {
+              "$Path": "status"
+            }
+          },
+          {
+            "@type": "https://sap.github.io/odata-vocabularies/vocabularies/UI.xml#UI.DataFieldForAction",
+            "Action": "OrderService.release",
+            "Label": "Release"
+          }
+        ],
+        "@UI.HeaderInfo": {
+          "TypeName": "Order",
+          "TypeNamePlural": "Orders",
+          "Title": {
+            "Value": {
+              "$Path": "orderNo"
+            }
+          }
+        },
+        "@UI.SelectionFields": ["status", "date"]
+      },
+      "OrderService.EntityContainer/Orders": {
+        "@Capabilities.DeleteRestrictions": {
+          "Deletable": false
+        }
+      },
+      "OrderService.Orders/ID": {
+        "@Core.ComputedDefaultValue": true
+      },
+      "OrderService.Orders/orderNo": {
+        "@Common.Label": "Order"
+      },
+      "OrderService.Orders/status": {
+        "@Validation.AllowedValues": [
+          {
+            "@Core.SymbolicName": "Open",
+            "Value": "O"
+          },
+          {
+            "@Core.SymbolicName": "Done",
+            "Value": "D"
+          }
+        ]
+      },
+      "OrderService.Orders/priority": {
+        "@Validation.AllowedValues": [
+          {
+            "@Core.SymbolicName": "Low",
+            "Value": 1
+          },
+          {
+            "@Core.SymbolicName": "High",
+            "Value": 3
+          }
+        ]
+      },
+      "OrderService.preview(OrderService.Orders,Edm.String)/lang": {
+        "@Core.OptionalParameter": {}
+      },
+      "OrderService.EntityContainer/Customers": {
+        "@Capabilities.DeleteRestrictions": {
+          "Deletable": false
+        },
+        "@Capabilities.InsertRestrictions": {
+          "Insertable": false
+        },
+        "@Capabilities.UpdateRestrictions": {
+          "Updatable": false
+        }
+      },
+      "OrderService.Customers/ID": {
+        "@Core.ComputedDefaultValue": true
+      },
+      "OrderService.Customers/name": {
+        "@Common.Label": "Customer"
+      },
+      "OrderService.Customers/address_city": {
+        "@Common.Label": "City"
+      },
+      "OrderService.topCustomers(Edm.Int32)/count": {
+        "@Core.OptionalParameter": {}
+      }
+    },
+    "release": [
+      {
+        "$Kind": "Action",
+        "$IsBound": true,
+        "$EntitySetPath": "in",
+        "$Parameter": [
+          {
+            "$Name": "in",
+            "$Type": "OrderService.Orders",
+            "$Nullable": true
+          }
+        ],
+        "$ReturnType": {
+          "$Type": "OrderService.Orders",
+          "$Nullable": true
+        }
+      }
+    ],
+    "preview": [
+      {
+        "$Kind": "Function",
+        "$IsBound": true,
+        "$IsComposable": false,
+        "$Parameter": [
+          {
+            "$Name": "in",
+            "$Type": "OrderService.Orders",
+            "$Nullable": true
+          },
+          {
+            "$Name": "lang",
+            "$Nullable": true
+          }
+        ],
+        "$ReturnType": {
+          "$Nullable": true
+        }
+      }
+    ],
+    "resetAll": [
+      {
+        "$Kind": "Action",
+        "$IsBound": false,
+        "$Parameter": [
+          {
+            "$Name": "reason"
+          }
+        ]
+      }
+    ],
+    "topCustomers": [
+      {
+        "$Kind": "Function",
+        "$IsBound": false,
+        "$IsComposable": false,
+        "$Parameter": [
+          {
+            "$Name": "count",
+            "$Type": "Edm.Int32",
+            "$Nullable": true
+          }
+        ],
+        "$ReturnType": {
+          "$Type": "OrderService.Customers",
+          "$Collection": true
+        }
+      }
+    ]
+  }
+}

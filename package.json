@@ -1,0 +1,55 @@
+{
+  "name": "odatatailor-diff",
+  "version": "1.0.0",
+  "description": "Catch breaking OData API changes in CI: compares two $metadata documents (V2 and V4, EDMX or CSDL JSON, files or URLs) and fails on breaking changes",
+  "license": "Apache-2.0",
+  "author": "Martin Koch <martin.koch@clouddna.at>",
+  "homepage": "https://odatatailor.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clouddnagmbh/odata-diff.git"
+  },
+  "bugs": "https://github.com/clouddnagmbh/odata-diff/issues",
+  "keywords": [
+    "odata",
+    "metadata",
+    "edmx",
+    "csdl",
+    "diff",
+    "breaking-changes",
+    "api",
+    "ci",
+    "sap",
+    "cap",
+    "gateway"
+  ],
+  "type": "module",
+  "bin": {
+    "odata-diff": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "prepack": "vite build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.6",
+    "vitest": "5.1.0"
+  }
+}

@@ -1,0 +1,16 @@
+name: Feature request
+description: An option, a report format or a rule you need in your pipeline
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What you want to check
+      description: Your API rules or pipeline, and where the tool falls short today
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Optional – how it could look on the command line or in the report

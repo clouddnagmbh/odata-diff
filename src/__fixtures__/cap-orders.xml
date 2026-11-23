@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Capabilities.V1.xml">
+    <edmx:Include Alias="Capabilities" Namespace="Org.OData.Capabilities.V1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Alias="Core" Namespace="Org.OData.Core.V1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
+    <edmx:Include Alias="UI" Namespace="com.sap.vocabularies.UI.v1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Validation.V1.xml">
+    <edmx:Include Alias="Validation" Namespace="Org.OData.Validation.V1"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema Namespace="OrderService" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <Annotation Term="Core.Links">
+        <Collection>
+          <Record>
+            <PropertyValue Property="rel" String="author"/>
+            <PropertyValue Property="href" String="https://cap.cloud.sap"/>
+          </Record>
+        </Collection>
+      </Annotation>
+      <EntityContainer Name="EntityContainer">
+        <EntitySet Name="Orders" EntityType="OrderService.Orders">
+          <NavigationPropertyBinding Path="customer" Target="Customers"/>
+          <NavigationPropertyBinding Path="items" Target="OrderItems"/>
+        </EntitySet>
+        <EntitySet Name="Customers" EntityType="OrderService.Customers">
+          <NavigationPropertyBinding Path="orders" Target="Orders"/>
+        </EntitySet>
+        <EntitySet Name="OrderItems" EntityType="OrderService.OrderItems">
+          <NavigationPropertyBinding Path="parent" Target="Orders"/>
+        </EntitySet>
+        <Singleton Name="Settings" Type="OrderService.Settings"/>
+        <ActionImport Name="resetAll" Action="OrderService.resetAll"/>
+        <FunctionImport Name="topCustomers" Function="OrderService.topCustomers" EntitySet="Customers"/>
+      </EntityContainer>
+      <EntityType Name="Orders">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Guid" Nullable="false"/>
+        <Property Name="orderNo" Type="Edm.String" MaxLength="10"/>
+        <Property Name="status" Type="Edm.String" MaxLength="1" DefaultValue="O"/>
+        <Property Name="priority" Type="Edm.Int32"/>
+        <Property Name="total" Type="Edm.Decimal" Precision="15" Scale="2"/>
+        <Property Name="date" Type="Edm.Date"/>
+        <NavigationProperty Name="customer" Type="OrderService.Customers" Partner="orders">
+          <ReferentialConstraint Property="customer_ID" ReferencedProperty="ID"/>
+        </NavigationProperty>
+        <Property Name="customer_ID" Type="Edm.Guid"/>
+        <NavigationProperty Name="items" Type="Collection(OrderService.OrderItems)" Partner="parent">
+          <OnDelete Action="Cascade"/>
+        </NavigationProperty>
+      </EntityType>
+      <EntityType Name="Customers">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Guid" Nullable="false"/>
+        <Property Name="name" Type="Edm.String" MaxLength="80" Nullable="false"/>
+        <Property Name="address_street" Type="Edm.String" MaxLength="60"/>
+        <Property Name="address_city" Type="Edm.String" MaxLength="40"/>
+        <NavigationProperty Name="orders" Type="Collection(OrderService.Orders)" Partner="customer"/>
+      </EntityType>
+      <EntityType Name="OrderItems">
+        <Key>
+          <PropertyRef Name="parent_ID"/>
+          <PropertyRef Name="pos"/>
+        </Key>
+        <NavigationProperty Name="parent" Type="OrderService.Orders" Partner="items">
+          <ReferentialConstraint Property="parent_ID" ReferencedProperty="ID"/>
+        </NavigationProperty>
+        <Property Name="parent_ID" Type="Edm.Guid" Nullable="false"/>
+        <Property Name="pos" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="product" Type="Edm.String" MaxLength="40"/>
+        <Property Name="qty" Type="Edm.Int32"/>
+      </EntityType>
+      <EntityType Name="Settings">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="currency" Type="Edm.String" MaxLength="3"/>
+      </EntityType>
+      <Action Name="release" IsBound="true" EntitySetPath="in">
+        <Parameter Name="in" Type="OrderService.Orders"/>
+        <ReturnType Type="OrderService.Orders"/>
+      </Action>
+      <Function Name="preview" IsBound="true" IsComposable="false">
+        <Parameter Name="in" Type="OrderService.Orders"/>
+        <Parameter Name="lang" Type="Edm.String"/>
+        <ReturnType Type="Edm.String"/>
+      </Function>
+      <Action Name="resetAll" IsBound="false">
+        <Parameter Name="reason" Type="Edm.String" Nullable="false"/>
+      </Action>
+      <Function Name="topCustomers" IsBound="false" IsComposable="false">
+        <Parameter Name="count" Type="Edm.Int32"/>
+        <ReturnType Type="Collection(OrderService.Customers)"/>
+      </Function>
+      <Annotations Target="OrderService.Orders">
+        <Annotation Term="UI.LineItem">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="orderNo"/>
+              <PropertyValue Property="Label" String="Order"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="status"/>
+            </Record>
+            <Record Type="UI.DataFieldForAction">
+              <PropertyValue Property="Action" String="OrderService.release"/>
+              <PropertyValue Property="Label" String="Release"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <Annotation Term="UI.HeaderInfo">
+          <Record Type="UI.HeaderInfoType">
+            <PropertyValue Property="TypeName" String="Order"/>
+            <PropertyValue Property="TypeNamePlural" String="Orders"/>
+            <PropertyValue Property="Title">
+              <Record Type="UI.DataField">
+                <PropertyValue Property="Value" Path="orderNo"/>
+              </Record>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="UI.SelectionFields">
+          <Collection>
+            <PropertyPath>status</PropertyPath>
+            <PropertyPath>date</PropertyPath>
+          </Collection>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.EntityContainer/Orders">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/ID">
+        <Annotation Term="Core.ComputedDefaultValue" Bool="true"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/orderNo">
+        <Annotation Term="Common.Label" String="Order"/>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/status">
+        <Annotation Term="Validation.AllowedValues">
+          <Collection>
+            <Record Type="Validation.AllowedValue">
+              <Annotation Term="Core.SymbolicName" String="Open"/>
+              <PropertyValue Property="Value" String="O"/>
+            </Record>
+            <Record Type="Validation.AllowedValue">
+              <Annotation Term="Core.SymbolicName" String="Done"/>
+              <PropertyValue Property="Value" String="D"/>
+            </Record>
+          </Collection>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.Orders/priority">
+        <Annotation Term="Validation.AllowedValues">
+          <Collection>
+            <Record Type="Validation.AllowedValue">
+              <Annotation Term="Core.SymbolicName" String="Low"/>
+              <PropertyValue Property="Value" Int="1"/>
+            </Record>
+            <Record Type="Validation.AllowedValue">
+              <Annotation Term="Core.SymbolicName" String="High"/>
+              <PropertyValue Property="Value" Int="3"/>
+            </Record>
+          </Collection>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.preview(OrderService.Orders,Edm.String)/lang">
+        <Annotation Term="Core.OptionalParameter">
+          <Record Type="Core.OptionalParameterType"/>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.EntityContainer/Customers">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.InsertRestrictions">
+          <Record Type="Capabilities.InsertRestrictionsType">
+            <PropertyValue Property="Insertable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.UpdateRestrictions">
+          <Record Type="Capabilities.UpdateRestrictionsType">
+            <PropertyValue Property="Updatable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="OrderService.Customers/ID">
+        <Annotation Term="Core.ComputedDefaultValue" Bool="true"/>
+      </Annotations>
+      <Annotations Target="OrderService.Customers/name">
+        <Annotation Term="Common.Label" String="Customer"/>
+      </Annotations>
+      <Annotations Target="OrderService.Customers/address_city">
+        <Annotation Term="Common.Label" String="City"/>
+      </Annotations>
+      <Annotations Target="OrderService.topCustomers(Edm.Int32)/count">
+        <Annotation Term="Core.OptionalParameter">
+          <Record Type="Core.OptionalParameterType"/>
+        </Annotation>
+      </Annotations>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
