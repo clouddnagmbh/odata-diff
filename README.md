@@ -1,5 +1,10 @@
 # odatatailor-diff
 
+[![npm](https://img.shields.io/npm/v/odatatailor-diff)](https://www.npmjs.com/package/odatatailor-diff)
+[![CI](https://github.com/clouddnagmbh/odata-diff/actions/workflows/ci.yml/badge.svg)](https://github.com/clouddnagmbh/odata-diff/actions/workflows/ci.yml)
+[![Node.js](https://img.shields.io/node/v/odatatailor-diff)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/clouddnagmbh/odata-diff/blob/main/LICENSE)
+
 **Catch breaking OData API changes before your consumers do.**
 
 `odata-diff` compares two OData `$metadata` documents, classifies every difference as **breaking**, **compatible** or **annotation only**, and exits with code 1 when something would break a client. Put it in your pipeline and "only additive changes within a version" stops being a review guideline and becomes a check.
